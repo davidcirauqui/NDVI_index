@@ -1,8 +1,8 @@
-"""Utility functions for computing the NDVI (Normalized Difference Vegetation
-Index) from Sentinel-2 imagery via SentinelHub.
-"""
 
+import numpy as np
 import pandas as pd
+from scipy import stats
+
 from sentinelhub import (
     BBox,
     bbox_to_dimensions,
@@ -86,3 +86,86 @@ def get_ndvi_mat(coords, resolution, dates, config):
     ndvi_mat = ndvi_mat.reshape(data[0].shape[0], data[0].shape[1])
 
     return ndvi_mat
+
+
+
+
+
+
+
+def deseasonalize_monthly(series):
+    """Remove the average seasonal (calendar-month) pattern from a monthly
+    series labeled "YYYY-MM"
+
+    inputs:
+        - series: time series to be deseasonalized
+    outputs:
+        - series_des: deseasonalized time series
+        - climatology: mean value of each month
+
+    """
+
+    series_des = pd.Series(series)
+
+    # compute month climatology
+    series_des.rename(lambda x: int(x[5:]), inplace = True)
+    climatology = series_des.groupby(series_des.index).mean()
+
+    # deseasonalize series by month climatology
+    for i in range(len(series_des)):
+        series_des.iloc[i] = series_des.iloc[i] - climatology.iloc[i % 12]
+
+    return series_des, climatology
+
+
+
+
+
+
+
+def mann_kendall_test(series):
+    """Mann-Kendall trend test.
+    Detects whether later values are consistently ranked higher or lower 
+    than earlier ones, more than chance would allow. 
+
+    inputs:
+        - series: time series to be tested
+    outputs:
+        - dict with keys: trend ("increasing"/"decreasing"/"no trend"), s, z,
+            p_value, tau (normalized S, in [-1, 1]).
+    """
+
+
+    x = np.asarray(series, dtype=float)
+    x = x[~np.isnan(x)]
+    n = len(x)
+    if n < 3:
+        raise ValueError("Need at least 3 non-NaN observations for a Mann-Kendall test")
+
+    s = 0
+    for k in range(n - 1):
+        s += np.sum(np.sign(x[k + 1:] - x[k]))
+
+    # variance correction for tied values
+    _, counts = np.unique(x, return_counts=True)
+    tie_term = np.sum(counts * (counts - 1) * (2 * counts + 5))
+    var_s = (n * (n - 1) * (2 * n + 5) - tie_term) / 18
+
+    if s > 0:
+        z = (s - 1) / np.sqrt(var_s)
+    elif s < 0:
+        z = (s + 1) / np.sqrt(var_s)
+    else:
+        z = 0.0
+
+    p_value = 2 * (1 - stats.norm.cdf(abs(z)))
+    tau = s / (n * (n - 1) / 2)
+
+    if p_value < 0.05 and s > 0:
+        trend = "increasing"
+    elif p_value < 0.05 and s < 0:
+        trend = "decreasing"
+    else:
+        trend = "no trend"
+
+    return {"trend": trend, "s": int(s), "z": float(z), "p_value": float(p_value), "tau": float(tau)}
