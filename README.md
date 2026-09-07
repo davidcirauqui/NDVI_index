@@ -10,7 +10,7 @@ The notebook finished with a conclusions section, in which I summarise what the 
 
 ## Structure
 - [NDVI.ipynb](NDVI.ipynb): the notebook going through the two case studies.
-- [utils.py](NDVI_utils.py): developed functions, imported in the notebook as 'NDVI'.
+- [utils.py](utils.py): developed functions, imported in the notebook as 'NDVI'.
 
 
 ## Setup
