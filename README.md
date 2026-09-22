@@ -5,7 +5,7 @@ I assess the health of vegetation over a given geographic area using the Normali
 - **A first glance**, over Sant Antoni de Portmany (Balearic Islands): monthly NDVI snapshots over a year to build intuition for how water, urban areas, and cropfields show up in the index.
 - **Desertification monitoring in the Sahel** (Ferlo desert, Senegal): a decade of monthly NDVI data (2016–present) analyzed for trend, deseasonalized, cross-correlated with rainfall, and broken down into phenology metrics (green-up, senescence, season length, peak timing).
 
-The notebook finished with a conclusions section, in which I summarise what the gathered data can tell about the desertification within the studied area.
+The notebook finishes with a conclusions section, in which I summarise what the gathered data can tell about the desertification within the studied area.
 
 
 ## Structure
